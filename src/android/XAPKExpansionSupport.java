@@ -10,10 +10,12 @@ import java.util.regex.Pattern;
 
 import android.content.Context;
 import android.os.Environment;
+import android.os.Build;
 
 public class XAPKExpansionSupport {
  // The shared path to all app expansion files
  private final static String EXP_PATH = "/Android/obb/";
+ private final static String EXP_PATH_API_23 = "/Android/data/"; // to avoid requesting storage permissions
  
  static String[] getAPKExpansionFiles (Context ctx, int mainVersion, int patchVersion) {
   String packageName = ctx.getPackageName ();
@@ -24,7 +26,8 @@ public class XAPKExpansionSupport {
   
   // Build the full path to the app's expansion files.
   File root = Environment.getExternalStorageDirectory ();
-  String expPathString = root.toString() + EXP_PATH + packageName;
+  String path = Build.VERSION.SDK_INT >=23 ? EXP_PATH_API_23 : EXP_PATH;
+  String expPathString = root.toString() + path + packageName;
   File expPath = new File(expPathString);
   
   // Check that the expansion file path exists.
@@ -60,8 +63,11 @@ public class XAPKExpansionSupport {
   File directory = new File (directoryName);
   ArrayList<String> files = new ArrayList<String>();
   File[] fileList = directory.listFiles();
-  for (File file : fileList) {
-   if (file.isFile()) {files.add (file.toString()); continue;}
+  // fileList may be null if there's a permissions error
+  if (fileList != null) {
+    for (File file : fileList) {
+    if (file.isFile()) {files.add (file.toString()); continue;}
+    }
   }
   return files;
  }
